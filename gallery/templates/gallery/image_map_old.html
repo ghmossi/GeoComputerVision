@@ -1,0 +1,124 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+{% load static %}  
+<div class="container-fluid">
+    
+    <div class="row justify-content-evenly">
+        <div class="col-5 align-self-center">
+            <img src="{{ photopair.image_r.url }}" class="d-block w-100 shadow-sm p-1 mb-2 rounded">
+        </div>
+        <div class="col-6 align-self-center">
+            <p style="color: goldenrod"> Imagen numero {{photopair.index}} del PhotoSet {{photopair.photoset.title}}, de {{photopair.photoset.owner}}</p> 
+              <ul class="list-group list-group-horizontal d-flex">
+                <li class="list-group-item flex-fill">
+                  <input class="form-check-input me-1" type="checkbox" id="checkphoto" checked onclick="updatemap()">
+                  <small>Otras Fotos</small>
+                  <span class="badge bg-primary rounded-pill">{{photopair.photoset.album.count}}</span>
+                </li>
+                <li class="list-group-item flex-fill">
+                  <input class="form-check-input me-1" type="checkbox" id="checkposts" onclick="updatemap()">
+                  <small>Postacion</small> 
+                </li>
+                <li class="list-group-item flex-fill">
+                    <input class="form-check-input me-1" type="checkbox" id="checklights" onclick="updatemap()">
+                    <small>Luminaria</small>
+                </li>
+              </ul>
+              <ul class="list-group list-group-horizontal">
+                <li class="list-group-item flex-fill">
+                    <input class="form-check-input me-1" type="checkbox" id="checkvehicles" onclick="updatemap()">
+                    <small>Vehiculos</small>
+                </li>
+                <li class="list-group-item flex-fill">
+                  <input class="form-check-input me-1" type="checkbox" id="checkothers" onclick="updatemap()">
+                  <small>Otros</small>
+                </li>
+                <li class="list-group-item flex-fill">
+                  <input class="form-check-input me-1" type="checkbox" disabled>
+                  <small>Reservado</small>
+                </li>
+              </ul>
+            <div class="shadow-sm p-1 mb-2 rounded" id="map-container">{{map|safe}}</div>
+            
+            <div id="map2" style="width: 800px; height: 600px;"></div>
+        </div>
+    </div>
+    <br>
+    <div class="row justify-content-center">
+        
+        <div class="col-sm-auto">
+            <a href="{% url 'gallery:image2' photopair.photoset.id previous %}" class="btn btn-secondary">Anterior ({{previous}})</a>
+        </div>
+        <div class="col-sm-auto">
+            <a href="{% url 'gallery:selectroi' photopair.photoset.id photopair.index %}" class="btn btn-secondary">Seleccionar Objetos</a>
+            <a href="{% url 'gallery:detectobject' photopair.photoset.id photopair.index %}" class="btn btn-secondary">Detectar Objetos</a>
+            <button class="btn btn-secondary" id="borrar-objetos" onclick="borrarObjetos()">Borrar Objetos</button>
+        </div>
+        <div class="col-sm-auto">
+            <a href="{% url 'gallery:image2' photopair.photoset.id next %}" class="btn btn-secondary">Siguiente ({{next}})</a>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" class="form-control" id="pk"value={{ photopair.photoset.id }}>
+<input type="hidden" class="form-control" id="pk2"value={{ photopair.index }}>
+
+
+<script src="{% static 'gallery/js/deleteAllObjects.js' %}"></script>
+
+<script>
+window.addEventListener("load", (event) => {
+  updatemap();
+});
+
+async function updatemap() {
+    var checkphoto = document.getElementById("checkphoto");
+    var checkposts = document.getElementById("checkposts");
+    var checklights = document.getElementById("checklights");
+    var checkvehicles = document.getElementById("checkvehicles");
+    var checkothers = document.getElementById("checkothers");
+    var map = document.getElementById("map-container");
+    var pk= document.getElementById("pk").value;
+    var pk2= document.getElementById("pk2").value;
+    var pkg = 0;
+    if (checkphoto.checked == true){
+        pkg+=1;
+    }
+    pkg<<=1;
+    if (checkposts.checked == true){   
+        pkg+=1;
+    } 
+    pkg<<=1;
+    if (checklights.checked == true){
+        pkg+=1;
+    }
+    pkg<<=1;
+    if (checkvehicles.checked == true){
+        pkg+=1;
+    }
+    pkg<<=1;
+    if (checkothers.checked == true){
+        pkg+=1;
+    }
+    response = await fetch(`/get_map/?object=${pkg}&pk=${pk}&pk2=${pk2}`);
+    data = await response.json();
+    if (data.map) {
+        map.innerHTML=(data.map)
+    }
+}
+
+async function detectautomatic() {
+
+    var pk= document.getElementById("pk").value;
+    var pk2= document.getElementById("pk2").value;
+ 
+    response = await fetch(`/get_map/?object=${pkg}&pk=${pk}&pk2=${pk2}`);
+    data = await response.json();
+    if (data.map) {
+        map.innerHTML=(data.map)
+    }
+}
+    
+</script>
+
+{% endblock %}  

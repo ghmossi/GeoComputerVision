@@ -1,0 +1,67 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+{% load static %}  
+<div class="container-fluid">
+    <br>
+    <div class="row justify-content-evenly">
+       
+        <div class="col-6 align-self-top">
+          <canvas id="canvas" height="675"></canvas>
+        </div>
+        <div class="col-6 align-self-top">
+          
+          <input type="hidden" class="form-control" id="urlRight" value={{ photopair.image_r.url  }}>
+          <input type="hidden" class="form-control" id="pk"value={{ photopair.photoset.id }}>
+          <input type="hidden" class="form-control" id="pk2"value={{ photopair.index }}>
+          <div class="map-container">{{map|safe}}</div>
+            <br>
+            <table class="table" id="tabla-datos" >
+              <thead>
+                <tr>
+                  <th scope="col"></th>
+                  <th scope="col">Objeto</th>
+                  <th scope="col">Descripcion</th>
+                  <th scope="col">Altitud</th>
+                  <th scope="col">Longitud</th>
+              
+                </tr>
+              </thead>
+              <tbody>
+              
+                {% for streetobject in photopair.img.all %}
+                <tr>
+                  <td><button  class="btn btn-secondary" onclick="mostrarContenido(this)" >Ver</button></td>
+                  <td >{{streetobject.name}} </td>
+                  <td>{{streetobject.description}} </td>
+                  <td hidden>{{streetobject.roi.center_x}} </td>
+                  <td hidden>{{streetobject.roi.center_y}} </td>
+                  <td hidden>{{streetobject.roi.width}} </td>
+                  <td hidden>{{streetobject.roi.height}} </td>
+                  <td>{{streetobject.location.latitude}} </td>
+                  <td>{{streetobject.location.longitude}} </td> 
+                  <td hidden>{{streetobject.id}} </td>              
+                </tr>
+                {% endfor %}
+                
+               
+              </tbody>
+            </table>
+        </div>
+        
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+ <script src="{% static 'gallery/js/allroi.js' %}"></script>
+ <style>
+    .column {
+      padding: 10px;
+    }
+    #canvas {
+   
+      width: 100%;
+
+    }
+ </style>
+ {% endblock %}  

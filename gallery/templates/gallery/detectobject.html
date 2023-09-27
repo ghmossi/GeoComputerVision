@@ -1,0 +1,106 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+{% load static %}  
+<div class="container-fluid">
+    <br>
+    <div class="row justify-content-evenly">
+       
+      <div class="col-6 align-self-center">
+        <h2>Detectando objetos en recorrido...</h2>
+        <!-- Utiliza las clases de Bootstrap para dar estilo a la barra de progreso -->
+        <div class="progress">
+            <div id="progressbar" class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ progress }}%</div>
+        </div>
+        <br>
+      </div>
+        <div class="col-6 align-self-top">
+          <div class="map-container">{{map|safe}}</div>
+          <input type="hidden" class="form-control" id="total" value={{photopair.photoset.album.count}}>
+          <input type="hidden" class="form-control" id="pk"value={{ photopair.photoset.id }}>
+          <input type="hidden" class="form-control" id="pk2"value={{ photopair.index }}>
+        </div>
+        
+    </div>
+    <br>
+    <div class="row justify-content-center">
+        
+
+      <div class="col-sm-auto">
+        <a href="{% url 'gallery:image2' photopair.photoset.id photopair.index %}" class="btn btn-secondary">Volver</a>
+      </div>
+ 
+      
+  </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    window.addEventListener("load", (event) => {
+      startdetection();
+      startUpdatingProgress();
+      startUpdatingProgressmapa();
+    });
+    
+    function startUpdatingProgress() {
+            // Inicia el intervalo de actualización cada 2 segundos (2000 ms)
+            updateInterval = setInterval(function() {
+                updateProgress();
+            }, 2000);
+        }
+
+        function startUpdatingProgressmapa() {
+            // Inicia el intervalo de actualización cada 2 segundos (2000 ms)
+            updateInterval = setInterval(function() {
+                updateProgressmapa();
+            }, 5000);
+        }
+    
+    async function startdetection() {
+    
+        var pk= document.getElementById("pk").value;
+        var pk2= document.getElementById("pk2").value;
+        var total= document.getElementById("total").value;
+     
+        response = await fetch(`/startdetection/?pk=${pk}&pk2=${pk2}&total=${total}`);
+        //data = await response.json();
+        //if (data.map) {
+         //   map.innerHTML=(data.map)
+       // }
+    }
+    
+    async function updateProgress() {
+    
+    var pk= document.getElementById("pk").value;
+    var pk2= document.getElementById("pk2").value;
+    var total= document.getElementById("total").value;
+ 
+    response = await fetch(`/updateprogress/?pk=${pk}&pk2=${pk2}&total=${total}`);
+    data = await response.json();
+    if (data.progress) {
+     
+     document.getElementById('progressbar').style.width = (data.progress) + "%";
+     document.getElementById('progressbar').setAttribute('aria-valuenow', (data.progress));
+     document.getElementById('progressbar').textContent = (data.progress) + "%";
+      }
+    }
+
+    async function updateProgressmapa() {
+    
+    var pk= document.getElementById("pk").value;
+    var pk2= document.getElementById("pk2").value;
+ 
+    try {
+        const response = await fetch(`/updateprogressmapa/?pk=${pk}&pk2=${pk2}`);
+        const data = await response.json();
+        if (data.map) {
+          document.querySelector('div.map-container').innerHTML=(data.map)
+        } else {
+          console.log("No hay datos");
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    }
+    </script>
+ {% endblock %}  

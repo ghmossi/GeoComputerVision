@@ -1,0 +1,22 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+
+<div class="container-md">
+<br>
+<h1>Select the set you want to see the map</h1>
+<br>
+<div class="form-group">
+
+
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p}}
+    <button type="submit" class="btn btn-secondary">Map</button>
+
+</div>
+
+</div>
+
+
+{% endblock %}

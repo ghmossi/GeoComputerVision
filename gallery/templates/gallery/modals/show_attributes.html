@@ -1,0 +1,31 @@
+<div class="modal-header">
+    <h2 class="modal-title">{{streetobject.name}}</h2>
+</div>
+  
+<div class="modal-body">
+  <h3>Tipo: {{streetobject.objtype}}</h3>
+</div>
+<div class="modal-body">
+  <p>Descripcion: {{streetobject.description}}</p>
+</div>  
+
+<div class="modal-footer">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Atributo</th>
+        <th scope="col">Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+    <div>
+      {% for attribute in streetobject.attributes_object.all %}
+      <tr>
+        <td scope="row">{{attribute.attribute_key}} </td>
+        <td>{{attribute.attribute_value}} </td>
+      </tr>
+      {% endfor %}
+      </div>
+  </table>
+  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+</div>

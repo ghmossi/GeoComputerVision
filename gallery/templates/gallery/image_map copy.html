@@ -1,0 +1,163 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+{% load static %}  
+<div class="container-fluid">
+    
+    <div class="row justify-content-evenly">
+        <div class="col-5 align-self-center">
+            <img src="{{ photopair.image_r.url }}" class="d-block w-100 shadow-sm p-1 mb-2 rounded">
+        </div>
+        <div class="col-6 align-self-center">
+            <p style="color: goldenrod"> Imagen numero {{photopair.index}} del PhotoSet {{photopair.photoset.title}}, de {{photopair.photoset.owner}}</p> 
+              <ul class="list-group list-group-horizontal d-flex">
+                <li class="list-group-item flex-fill">
+                  <input class="form-check-input me-1" type="checkbox" id="checkphoto" checked onclick="updatemap()">
+                  <small>Otras Fotos</small>
+                  <span class="badge bg-primary rounded-pill">{{photopair.photoset.album.count}}</span>
+                </li>
+                <li class="list-group-item flex-fill">
+                  <input class="form-check-input me-1" type="checkbox" id="checkposts" onclick="updatemap()">
+                  <small>Postacion</small> 
+                </li>
+                <li class="list-group-item flex-fill">
+                    <input class="form-check-input me-1" type="checkbox" id="checklights" onclick="updatemap()">
+                    <small>Luminaria</small>
+                </li>
+              </ul>
+              <ul class="list-group list-group-horizontal">
+                <li class="list-group-item flex-fill">
+                    <input class="form-check-input me-1" type="checkbox" id="checkvehicles" onclick="updatemap()">
+                    <small>Vehiculos</small>
+                </li>
+                <li class="list-group-item flex-fill">
+                  <input class="form-check-input me-1" type="checkbox" id="checkothers" onclick="updatemap()">
+                  <small>Otros</small>
+                </li>
+                <li class="list-group-item flex-fill">
+                  <input class="form-check-input me-1" type="checkbox" disabled>
+                  <small>Reservado</small>
+                </li>
+              </ul>
+            <div class="shadow-sm p-1 mb-2 rounded" id="map-container">{{map|safe}}</div>
+            
+            <div id="map2" style="width: 800px; height: 600px;"></div>
+        </div>
+    </div>
+    <br>
+    <div class="row justify-content-center">
+        
+        <div class="col-sm-auto">
+            <a href="{% url 'gallery:image2' photopair.photoset.id previous %}" class="btn btn-secondary">Anterior ({{previous}})</a>
+        </div>
+        <div class="col-sm-auto">
+            <a href="{% url 'gallery:selectroi' photopair.photoset.id photopair.index %}" class="btn btn-secondary">Seleccionar Objetos</a>
+            <a href="{% url 'gallery:detectobject' photopair.photoset.id photopair.index %}" class="btn btn-secondary">Detectar Objetos</a>
+            <button class="btn btn-secondary" id="borrar-objetos" onclick="borrarObjetos()">Borrar Objetos</button>
+        </div>
+        <div class="col-sm-auto">
+            <a href="{% url 'gallery:image2' photopair.photoset.id next %}" class="btn btn-secondary">Siguiente ({{next}})</a>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" class="form-control" id="pk"value={{ photopair.photoset.id }}>
+<input type="hidden" class="form-control" id="pk2"value={{ photopair.index }}>
+<div style="display: none" id="jsonData" data-json="{{ data }}"></div>
+<div style="display: none" id="jsonData2" data-json2="{{ data2 }}"></div>
+<div style="display: none" id="jsonData3" data-json3="{{ data3 }}"></div>
+
+<script src="{% static 'gallery/js/deleteAllObjects.js' %}"></script>
+<script src="{% static 'gallery/js/leaflet.js' %}"></script>
+<script src="{% static 'gallery/js/generatemap.js' %}"></script>
+<script>
+//window.addEventListener("load", (event) => {
+  //updatemap();
+//});
+
+async function updatemap() {
+    var checkphoto = document.getElementById("checkphoto");
+    var checkposts = document.getElementById("checkposts");
+    var checklights = document.getElementById("checklights");
+    var checkvehicles = document.getElementById("checkvehicles");
+    var checkothers = document.getElementById("checkothers");
+    var map = document.getElementById("map-container");
+    var pk= document.getElementById("pk").value;
+    var pk2= document.getElementById("pk2").value;
+    var pkg = 0;
+    if (checkphoto.checked == true){
+        pkg+=1;
+    }
+    pkg<<=1;
+    if (checkposts.checked == true){   
+        pkg+=1;
+    } 
+    pkg<<=1;
+    if (checklights.checked == true){
+        pkg+=1;
+    }
+    pkg<<=1;
+    if (checkvehicles.checked == true){
+        pkg+=1;
+    }
+    pkg<<=1;
+    if (checkothers.checked == true){
+        pkg+=1;
+    }
+    response = await fetch(`/get_map/?object=${pkg}&pk=${pk}&pk2=${pk2}`);
+    data = await response.json();
+    if (data.map) {
+        map.innerHTML=(data.map)
+    }
+}
+
+async function detectautomatic() {
+
+    var pk= document.getElementById("pk").value;
+    var pk2= document.getElementById("pk2").value;
+ 
+    response = await fetch(`/get_map/?object=${pkg}&pk=${pk}&pk2=${pk2}`);
+    data = await response.json();
+    if (data.map) {
+        map.innerHTML=(data.map)
+    }
+}
+    var positions = [{% for position in positions %}[{{ position.location.latitude }}, {{ position.location.longitude }}]{% if not forloop.last %},{% endif %}{% endfor %}];
+    var lastPosition = positions[positions.length - 1];  // Obtener la última posición
+    console.log(lastPosition)
+    var mapa = L.map('map2').setView([ {{photopair.location.latitude}},{{photopair.location.longitude}}], 18);
+    //var mapa= L.map('map2').setView([51.505, -0.09], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 30,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapa);
+
+        // Loop through positions from Django and add markers
+        {% for position in positions %}
+        var markerOptions = {
+            //title: position.description,  // Tooltip
+            riseOnHover: true,            // Elevate marker on hover
+            opacity: 0.7                  // Opacity (adjust as needed)
+        };
+        if ({{ position.location.latitude }}=== {{ photopair.location.latitude }}&&{{ position.location.longitude }}=== {{ photopair.location.longitude }}) {  // Replace 123 with the actual position ID
+            markerOptions.icon = L.divIcon({
+                className: 'custom-marker-icon',
+                html: '<i class="fas fa-map-marker-alt" style="color: red;"></i>',
+                iconSize: [32, 32],               // Adjust icon size as needed
+                iconAnchor: [16, 32],             // Adjust icon anchor as needed
+            });
+        }
+        var popupContent = "<b>Description:</b> dato <br>" +
+                                   "<a href='/images/"+{{ photopair.photoset.id }}+"/"+{{ position.index }}+"/'>Link to Example</a>";
+            L.marker([{{ position.location.latitude }}, {{ position.location.longitude }}],markerOptions)
+                .addTo(mapa)
+                .bindPopup(popupContent);
+            
+        {% endfor %}
+</script>
+<style>
+    .custom-marker-icon i {
+    color: red;
+    font-size: 40px; /* Ajusta el tamaño según tus necesidades */
+}
+</style>
+{% endblock %}  

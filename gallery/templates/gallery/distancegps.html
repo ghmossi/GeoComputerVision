@@ -1,0 +1,105 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+{% load static %}   
+
+<script src="{% static 'js/bootstrap5.modal.forms.min.js' %}"></script>
+
+<div class="container-fluid">
+  <div class="row justify-content-evenly">
+    <div class="col-6 align-self-top">
+      <canvas id="canvas" height="675"></canvas>
+    </div>
+    <div class="col-6 align-self-top ">
+      <canvas id="canvas2" height="675"></canvas>
+      <input type="hidden" class="form-control" id="pk"value={{ photopair.photoset.id }}>
+      <input type="hidden" class="form-control" id="pk2"value={{ photopair.index }}>
+      <input type="hidden" class="form-control" id="total"value={{photopair.photoset.album.count}}>
+
+      <input type="hidden" class="form-control" id="urlRight" value={{ photopair.image_r.url }}>
+      <input type="hidden" class="form-control" id="urlLeft" value={{ photopair.image_l.url }}>
+      <input type="hidden" class="form-control" id="urlRight2" value={{ photopair.image_r.url }}>
+      <input type="hidden" class="form-control" id="urlLeft2" value={{ photopair.image_l.url }}>
+      
+      <input type="hidden" class="form-control" id="lat" value={{ location.latitude }}>
+      <input type="hidden" class="form-control" id="lon" value={{ location.longitude }}>
+      <input type="hidden" class="form-control" id="lat2" value={{ location.latitude }}>
+      <input type="hidden" class="form-control" id="lon2" value={{ location.longitude }}>
+
+      <input type="hidden" class="form-control" id="lat_next" value={{ location_next.latitude }}>
+      <input type="hidden" class="form-control" id="lon_next" value={{ location_next.longitude }}>
+      <input type="hidden" class="form-control" id="lat_next2" value={{ location_next.latitude }}>
+      <input type="hidden" class="form-control" id="lon_next2" value={{ location_next.longitude }}>
+                  
+      <input type="hidden" class="form-control" id="xRight" >
+      <input type="hidden" class="form-control" id="yRight" >
+      <input type="hidden" class="form-control" id="wRight" >
+      <input type="hidden" class="form-control" id="hRight" >
+
+      <input type="hidden" class="form-control" id="xRight2" >
+      <input type="hidden" class="form-control" id="yRight2" >
+      <input type="hidden" class="form-control" id="wRight2" >
+      <input type="hidden" class="form-control" id="hRight2" >
+
+      <div id="result" class="ve"></div>
+     
+      
+    </div> 
+         
+  </div>
+  <button type="submit" class="btn btn-secondary">Distancia</button>
+  <button type="submit" class="btn btn-secondary" onclick="Anterior()">Anterior</button>
+  <button type="submit" class="btn btn-secondary" onclick="Siguiente()">Siguiente</button>
+</div>
+<script src="{% static 'gallery/js/selectroigps.js' %}"></script>
+<script src="{% static 'gallery/js/zdepth.js' %}"></script>
+<script>
+function Anterior() {
+  var pk= parseInt(document.getElementById("pk").value);
+  var pk2= parseInt(document.getElementById("pk2").value);
+  if(pk2>0){
+      pk2=pk2-1
+      UpdatePhoto(pk,pk2);
+      document.getElementById("pk2").setAttribute('value',pk2);
+
+  }
+}
+function Siguiente() {
+  var pk= parseInt(document.getElementById("pk").value);
+  var pk2= parseInt(document.getElementById("pk2").value);
+  var total=parseInt(document.getElementById("total").value);
+  if(pk2<total){
+      pk2=pk2+1
+      UpdatePhoto(pk,pk2);
+      document.getElementById("pk2").setAttribute('value',pk2);
+      
+  }
+}
+async  function UpdatePhoto(pk,pk2){
+
+  response = await fetch(`/updatephotogps/?pk=${pk}&pk2=${pk2}`);
+  data = await response.json();
+  if (data.image_r) {
+    document.getElementById("urlRight2").setAttribute('value',`${data.image_r}`);
+    document.getElementById("urlLeft2").setAttribute('value',`${data.image_l}`);
+    
+
+  }  
+
+}
+
+
+
+</script>
+<style>
+  .column {
+    padding: 10px;
+  }
+  #canvas {
+    width: 100%;
+  }
+  #canvas2 {
+    width: 100%;
+  }
+</style>
+
+{% endblock %} 

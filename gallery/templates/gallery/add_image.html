@@ -1,0 +1,18 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+
+<div class="container-md">
+    <br>
+    <h1>Add images to your set</h1>
+    <br>
+    <div class="form-group">
+        <form action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p}}
+            <button class="btn btn-secondary">Upload</button>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}

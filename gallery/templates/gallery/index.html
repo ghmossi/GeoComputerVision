@@ -1,0 +1,20 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+{% if user.is_authenticated %}
+{% if image_sets_list %}
+    <ul>
+    {% for image_set in image_sets_list %}
+    {% if image_set.owner.id == user.id %}
+    {% if image_set.album.count != 0 %}
+    <li><a href="{% url 'gallery:image2' image_set.id 0%}">{{ image_set.title}}</a></li>
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No image sets are available.</p>
+{% endif %}
+{% else %}
+    <p>Please login</p>
+{% endif %}
+{% endblock %}

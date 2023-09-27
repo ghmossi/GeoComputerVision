@@ -1,0 +1,29 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+
+<div class="container-md">
+<br>
+<h1>Login</h1>
+<br>
+<div class="form-group">
+
+
+<!-- 
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p}}
+    <button type="submit" class="btn btn-secondary">Upload</button>
+ -->
+
+
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p}}
+    <button class="btn btn-secondary">Login</button>
+</form>
+
+</div>
+</div>
+
+
+{% endblock %}

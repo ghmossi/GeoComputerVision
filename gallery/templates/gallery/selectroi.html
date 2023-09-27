@@ -1,0 +1,116 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+{% load static %}   
+
+<script src="{% static 'js/bootstrap5.modal.forms.min.js' %}"></script>
+
+<div class="container-fluid">
+  <div class="row justify-content-evenly">
+    <div class="col-2 align-self-top">
+      <div class="btn-group-vertical">
+        <button class="btn btn-secondary" id="zoom-in" onclick="zoomIn()">Zoom In</button>
+        <button class="btn btn-secondary" id="zoom-out" onclick="zoomOut()">Zoom Out</button>
+        <button class="btn btn-secondary" id="move-up" onclick="movUp()">Move Up</button>
+        <button class="btn btn-secondary" id="move-down" onclick="movDown()">Move Down</button>
+        <button class="btn btn-secondary" id="move-left"onclick="movLeft()">Move Left</button>
+        <button class="btn btn-secondary" id="move-right"onclick="movRight()">Move Right</button>
+        <button class="btn btn-secondary" id="reset-Zoom"onclick="resetZoom()">Reset Zoom</button><br><br>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id="roidistancia" onclick="RoiDistancia()">
+          <label class="form-check-label" for="flexSwitchCheckDefault">Obtener distancias  entre objetos</label>
+        </div>
+        <div class="btn-group-vertical">
+          <button class="btn btn-secondary"id="enviar">Produndidad</button><br>
+          <a href="{% url 'gallery:viewobjects' photopair.photoset.id photopair.index%}" class="btn btn-secondary">Objetos Agregados</a><br>
+          <a href="{% url 'gallery:image2' photopair.photoset.id photopair.index %}" class="btn btn-secondary">volver</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 align-self-top">
+      <canvas id="canvas" height="675"></canvas>
+    </div>
+    <div class="col-4 align-self-top ">
+      <input type="hidden" class="form-control" id="urlRight" value={{ photopair.image_r.url }}>
+      <input type="hidden" class="form-control" id="urlLeft" value={{ photopair.image_l.url }}>
+      <input type="hidden" class="form-control" id="lat" value={{ location.latitude }}>
+      <input type="hidden" class="form-control" id="lon" value={{ location.longitude }}>
+
+      <input type="hidden" class="form-control" id="lat_next" value={{ location_next.latitude }}>
+      <input type="hidden" class="form-control" id="lon_next" value={{ location_next.longitude }}>
+                  
+      <input type="hidden" class="form-control" id="xRight" >
+      <input type="hidden" class="form-control" id="yRight" >
+      <input type="hidden" class="form-control" id="wRight" >
+      <input type="hidden" class="form-control" id="hRight" >
+
+      <input type="hidden" class="form-control" id="xRight2" >
+      <input type="hidden" class="form-control" id="yRight2" >
+      <input type="hidden" class="form-control" id="wRight2" >
+      <input type="hidden" class="form-control" id="hRight2" >
+      <input type="hidden" class="form-control" id="distanceObjects" value="false" >
+
+      <h1>{{photopair.photoset.title}}</h1>
+      <p style="color: goldenrod"> Imagen numero {{photopair.index}}, con {{photopair.img.count}} objetos</p>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p}}
+        <button type="submit" class="btn btn-secondary">Guardar objeto</button>
+      </form>
+      <div id="result" class="ve"></div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Objeto</th>
+            <th scope="col">#</th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+        <div>
+          {% for streetobject in photopair.img.all %}
+          <tr>
+            <th scope="row">{{streetobject.name}} </th>
+            <td>{{streetobject.attributes_object.count}} </td>
+            <td><button id="show-attributes{{streetobject.id}}" class="btn btn-secondary" type="button" name="button">Mostrar</button></td>
+            <td><button id="create-attribute{{streetobject.id}}" class="btn btn-secondary" type="button" name="button">Crear Atributo</button></td>
+            <td><button id="delete-streetobject{{streetobject.id}}" class="btn btn-danger" type="button" name="button">Borrar Objeto</button></td>
+          </tr>
+          <script type="text/javascript">
+            document.addEventListener('DOMContentLoaded', (e) => {
+              modalForm(document.getElementById('show-attributes{{streetobject.id}}'), {
+                formURL: "{% url 'gallery:showattributes' streetobject.id %}"
+              })
+              modalForm(document.getElementById('create-attribute{{streetobject.id}}'), {
+                formURL: "{% url 'gallery:addattribute' photopair.photoset.id photopair.index streetobject.id %}"
+              })
+              modalForm(document.getElementById('delete-streetobject{{streetobject.id}}'), {
+                formURL: "{% url 'gallery:deletestreetobject' streetobject.id %}",
+                isDeleteForm: true})
+            });
+          </script>
+          {% endfor %}
+          </div>
+      </table>
+      <div class="modal fade" tabindex="-1" role="dialog" id="modal">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content"></div>
+        </div>
+      </div>
+    </div>        
+  </div>
+</div>
+<script src="{% static 'gallery/js/selectroi.js' %}"></script>
+<script src="{% static 'gallery/js/zdepth.js' %}"></script>
+
+<style>
+  .column {
+    padding: 10px;
+  }
+  #canvas {
+    width: 100%;
+  }
+</style>
+
+{% endblock %} 

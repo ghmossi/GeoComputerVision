@@ -1,0 +1,18 @@
+{% extends 'gallery/base.html' %}
+{% block content %}
+
+<div class="container-md">
+    <br>
+    <h1>Seleccione el Set de objetos que desea descargar como DXF</h1>
+    <br>
+    <div class="form-group">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p}}
+            <button type="submit" class="btn btn-secondary">Descargar</button>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}
