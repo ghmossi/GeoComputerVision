@@ -153,7 +153,8 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
 
 
     disparity = find_depth(circles_right,circles_left,Right_nice, Left_nice, B, f, alpha)
-    image_width =2666
+    #image_width =2666
+    image_width =1333
     alpha=120
     print("///////////////")
     #print("Disparity: ",disparity)
@@ -196,17 +197,17 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
     return round(zdepth,1),round(x,1),round(disparity,0) 
 
 def DisparityDepth(disp):
-    if disp > 61:
-        m=-4.75
-        b=99
+    if disp > 31:
+        m=-2.25
+        b=49
         depth=(disp-b)/m
     if disp >37 & disp <= 61 :
-        m=-4
-        b=93
+        m=-2
+        b=48
         depth=(disp-b)/m
     if disp <=37:
-        m=-1
-        b=51
+        m=-0,6
+        b=42
         depth=(disp-b)/m
     return depth
 
