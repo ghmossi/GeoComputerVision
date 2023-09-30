@@ -206,7 +206,7 @@ def DisparityDepth(disp):
         b=48
         depth=(disp-b)/m
     if disp <=19:
-        m=-0,6
+        m=-0.6
         b=42
         depth=(disp-b)/m
     return depth
