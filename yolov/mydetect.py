@@ -28,8 +28,8 @@ def detect(image,model):
     save_txt=False
     imgsz=640
     device=''
-    conf_thres=0.6
-    iou_thres=0.7
+    conf_thres=0.75 # tiene que ser bajo
+    iou_thres=0.25
     #trace = 
 
     # Initialize
@@ -55,7 +55,7 @@ def detect(image,model):
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
-    names=[ 'luminaria','postacion'] #invierto las classes por que se entreno mal
+    #names=[ 'luminaria','postacion'] #invierto las classes por que se entreno mal
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
     colors = [[255, 51, 51], [155, 153, 51]]
 
@@ -98,6 +98,7 @@ def detect(image,model):
         origen=[]
         fin=[]
         objectlabel=[]
+        objectconf=[]
         # Process detections
         for i, det in enumerate(pred):  # detections per image
             #if webcam:  # batch_size >= 1
@@ -131,22 +132,16 @@ def detect(image,model):
                     if save_img or view_img:  # Add bbox to image
                         label = f'{names[int(cls)]} {conf:.2f}'
                         labelOnly =f'{names[int(cls)]}'
+                        confOnly = f'{conf:.2f}'
                         tuplaOrigen,tuplaFin=plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=5)
                         origen+=[tuplaOrigen]
                         fin+=[tuplaFin]
                         objectlabel+=[labelOnly]
-                        print (im0.shape)
+                        objectconf+=[confOnly]
+                        #print (im0.shape)
 
             print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
 
- 
-            #alto=1000
-            #ancho=1333
-            #cv2.namedWindow('ObjetoDetectado',cv2.WINDOW_NORMAL)
-            #cv2.resizeWindow('ObjetoDetectado',alto,ancho)
-            #cv2.imshow("ObjetoDetectado", im0)
-            #cv2.waitKey()  # 1 millisecond
-    #print(origen,fin)
     objects = []
     for tuplaOrigen,tuplaFin in zip(origen,fin):
         y_origen,x_origen =tuplaOrigen
@@ -159,7 +154,7 @@ def detect(image,model):
         obj = MyObjectRois(x,y,w,h)
         objects.append(obj)
   
-    return im0,objects,objectlabel   
+    return im0,objects,objectlabel,objectconf   
 
 class MyObjectRois:
     def __init__(self, x, y,w,h):

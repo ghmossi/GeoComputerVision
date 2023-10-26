@@ -21,8 +21,10 @@
         </div>
         <div class="btn-group-vertical">
           <button class="btn btn-secondary"id="enviar">Produndidad</button><br>
-          <a href="{% url 'gallery:viewobjects' photopair.photoset.id photopair.index%}" class="btn btn-secondary">Objetos Agregados</a><br>
+          <a href="{% url 'gallery:viewobjects' photopair.photoset.id photopair.index%}" class="btn btn-secondary">Objetos Agregados</a>
           <a href="{% url 'gallery:image2' photopair.photoset.id photopair.index %}" class="btn btn-secondary">volver</a>
+          <a href="{% url 'gallery:selectroi' photopair.photoset.id previous %}" class="btn btn-secondary">Anterior ({{previous}})</a>
+          <a href="{% url 'gallery:selectroi' photopair.photoset.id next %}" class="btn btn-secondary">Siguiente ({{next}})</a>
         </div>
       </div>
     </div>

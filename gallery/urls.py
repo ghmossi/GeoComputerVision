@@ -14,7 +14,6 @@ urlpatterns = [
     path('images/<int:pk>/<int:pk2>/', login_required(views.ImageMapView.as_view()), name='image2'),
     path('images/old/<int:pk>/<int:pk2>/', login_required(views.ImageMapViewOld.as_view()), name='imagemapold'),
     path('images/<int:pk>/<int:pk2>/selectroi/', login_required(views.SelectROIView.as_view()), name='selectroi'),
-    path('images/<int:pk>/<int:pk2>/distancegps/', login_required(views.DistanceGPS.as_view()), name='distancegps'),
     path('modal/<int:pk>/<int:pk2>/<int:pk3>/', login_required(views.AddAttributeView.as_view()), name='addattribute'),
     path('modal/<int:pk>/delete/', login_required(views.DeleteStreetObjectView.as_view()), name='deletestreetobject'),
     path('modal/<int:pk>/show/', login_required(views.ShowAttributeView.as_view()), name='showattributes'),
@@ -27,9 +26,10 @@ urlpatterns = [
     path('objectselec/', objectselec, name='objectselec'),
     path('deleteallobjects/', deleteallobjects, name='deleteallobjects'),
     path('startdetection/', startdetection, name='startdetection'),
+    path('stopdetection/', views.stopdetection, name='stopdetection'),
     path('updateprogress/', updateprogress, name='updateprogress'),
     path('updateprogressmapa/', updateprogressmapa, name='updateprogressmapa'),
     path('get_map/', get_map, name='getmap'),
-    path('updatephotogps/', updatephotogps, name='updatephotogps')
+
     
 ]

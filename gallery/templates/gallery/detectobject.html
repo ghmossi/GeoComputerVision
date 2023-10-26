@@ -6,7 +6,10 @@
     <div class="row justify-content-evenly">
        
       <div class="col-6 align-self-center">
-        <h2>Detectando objetos en recorrido...</h2>
+        <br>
+        <div id="result" class="ve"></div>
+        <br>
+        <h2 id="text">Detectando objetos en recorrido...</h2>
         <!-- Utiliza las clases de Bootstrap para dar estilo a la barra de progreso -->
         <div class="progress">
             <div id="progressbar" class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ progress }}%</div>
@@ -27,6 +30,7 @@
 
       <div class="col-sm-auto">
         <a href="{% url 'gallery:image2' photopair.photoset.id photopair.index %}" class="btn btn-secondary">Volver</a>
+        <button class="btn btn-secondary" id="stop-detection"onclick="stopdetection()">Detener</button><br><br>
       </div>
  
       
@@ -36,11 +40,16 @@
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script>
+    
+    const resultDiv = document.getElementById('result');
+    const textDiv = document.getElementById('text');
     window.addEventListener("load", (event) => {
+  
       startdetection();
       startUpdatingProgress();
       startUpdatingProgressmapa();
     });
+
     
     function startUpdatingProgress() {
             // Inicia el intervalo de actualización cada 2 segundos (2000 ms)
@@ -49,7 +58,7 @@
             }, 2000);
         }
 
-        function startUpdatingProgressmapa() {
+    function startUpdatingProgressmapa() {
             // Inicia el intervalo de actualización cada 2 segundos (2000 ms)
             updateInterval = setInterval(function() {
                 updateProgressmapa();
@@ -63,11 +72,24 @@
         var total= document.getElementById("total").value;
      
         response = await fetch(`/startdetection/?pk=${pk}&pk2=${pk2}&total=${total}`);
-        //data = await response.json();
-        //if (data.map) {
-         //   map.innerHTML=(data.map)
-       // }
+        data = await response.json();
+        if (data.taskId) {
+                resultDiv.innerText = `${data.taskId}`;
+        }        
+        console.log(data)
     }
+    
+    async function stopdetection() {
+    
+      var pk= document.getElementById("pk").value;
+ 
+      response = await fetch(`/stopdetection/?pk=${pk}`);
+      data = await response.json();
+      if (data.taskId) {
+                resultDiv.innerText = `${data.taskId}`;
+        } 
+      console.log(data)
+    } 
     
     async function updateProgress() {
     
@@ -78,11 +100,14 @@
     response = await fetch(`/updateprogress/?pk=${pk}&pk2=${pk2}&total=${total}`);
     data = await response.json();
     if (data.progress) {
-     
-     document.getElementById('progressbar').style.width = (data.progress) + "%";
-     document.getElementById('progressbar').setAttribute('aria-valuenow', (data.progress));
-     document.getElementById('progressbar').textContent = (data.progress) + "%";
-      }
+        document.getElementById('progressbar').style.width = (data.progress) + "%";
+        document.getElementById('progressbar').setAttribute('aria-valuenow', (data.progress));
+        document.getElementById('progressbar').textContent = (data.progress) + "%";
+    }
+    if (data.text) {
+        textDiv.innerText = `${data.text}`;
+    }
+
     }
 
     async function updateProgressmapa() {

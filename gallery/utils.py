@@ -7,6 +7,7 @@ import cv2
 import math
 import numpy as np
 from geographiclib.geodesic import Geodesic
+import pyproj
 
 def generate_map(ps,ind, photos = True, layers = [StreetObject.ObjectType.OTROS, StreetObject.ObjectType.POSTACION, StreetObject.ObjectType.LUMINARIA]):
     color_options = ['beige', 'black', 'blue', 'cadetblue', 'darkblue', 'darkgreen', 'darkpurple', 'darkred', 'gray', 'green', 'lightblue', 'lightgray', 'lightgreen', 'lightred', 'orange', 'pink', 'purple', 'white']
@@ -106,8 +107,8 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
     color=(0,255,0)
     grosor=2
     ref=450
-    ancho=2000
-    alto=1500
+    ancho=2333
+    alto=2000
     count = 0
     indice=0
     i=0
@@ -154,7 +155,7 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
 
     disparity = find_depth(circles_right,circles_left,Right_nice, Left_nice, B, f, alpha)
     #image_width =2666
-    image_width =1333
+    image_width =2666
     alpha=120
     print("///////////////")
     #print("Disparity: ",disparity)
@@ -163,26 +164,26 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
         beta=(alpha/2)-((xR*(alpha/2))/float(cuadrante))
         grados = round(beta, 2)
         rad=math.radians(grados)
-        print("cos a: ",math.cos(rad))
+        ##print("cos a: ",math.cos(rad))
         #disparity = disparity *(1/math.cos(rad))
         phi=math.radians(-90+(grados))
-        print("Grados: ",grados*-1)
-        print("Disparity: ",disparity)
+        ##print("Grados: ",grados*-1)
+        ##print("Disparity: ",disparity)
 
     if xR>cuadrante:
         beta=(alpha/2)-(((image_width-xR)*(alpha/2))/float(cuadrante))
         grados = round(beta, 2)
         rad=math.radians(grados)
-        print("cos a: ",math.cos(rad))
+        ##print("cos a: ",math.cos(rad))
         #disparity = disparity * (math.cos(rad))
-        print("Grados: ",grados)
-        print("Disparity: ",disparity)
+        ##print("Grados: ",grados)
+        ##print("Disparity: ",disparity)
        
 
     if xR==cuadrante:
         grados=0
-        print("Grados: ",grados)
-        print("Disparity: ",disparity)
+        ##print("Grados: ",grados)
+        ##print("Disparity: ",disparity)
 
     zdepth=DisparityDepth(disparity)
     if xR>cuadrante:
@@ -197,6 +198,21 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
     return round(zdepth,1),round(x,1),round(disparity,0) 
 
 def DisparityDepth(disp):
+    if disp > 61:
+        m=-4.75
+        b=99
+        depth=(disp-b)/m
+    if disp >37 & disp <= 61 :
+        m=-4
+        b=93
+        depth=(disp-b)/m
+    if disp <=37:
+        m=-1
+        b=51
+        depth=(disp-b)/m
+    return depth
+
+def DisparityDepth_1333x1000(disp):
     if disp > 31:
         m=-2.25
         b=49
@@ -214,7 +230,7 @@ def DisparityDepth(disp):
 def LatitudeLongitude(lat,lon,lat_next,lon_next,z,x):
     A = (float(lat),float(lon))
     B = (float(lat_next),float(lon_next))
-    print(A,B)
+    #print(A,B)
 
     s= z
     #Define the ellipsoid
@@ -224,7 +240,7 @@ def LatitudeLongitude(lat,lon,lat_next,lon_next,z,x):
     inv = geod.Inverse(A[0],A[1],B[0],B[1])
     #deno sumarle angulo al azimut desde 90 a -90
     azi1 = (inv['azi1'])
-    print('Initial Azimuth from A to B = ' + str(azi1))
+    #print('Initial Azimuth from A to B = ' + str(azi1))
 
     #Solve the Direct problem
     dir = geod.Direct(A[0],A[1],azi1,s)
@@ -241,7 +257,7 @@ def LatitudeLongitude(lat,lon,lat_next,lon_next,z,x):
 
     C = (dirper['lat2'],dirper['lon2'])   
     
-    print('C = ' + str(C))
+    print('GPS =' + str(C))
     return C
 
 # utils.py
@@ -298,39 +314,60 @@ def generate_DXF(path,ps):
     doc.layers.add(name=StreetObject.ObjectType.VEHICULO, color=4)
     doc.layers.add(name=StreetObject.ObjectType.OTROS, color=3)
 
-    flag = doc.blocks.new(name='FLAG')
-    flag.add_lwpolyline([(0.4, 0), (-0.4, 0)])  # the flag symbol as 2D polyline
-    flag.add_circle((0, 0), .4)  # mark the base point with a circle
+    photo = doc.blocks.new(name='PHOTO')
+    photo.add_lwpolyline([(2, -1), (2, 1)])  # the flag symbol as 2D polyline
+    photo.add_lwpolyline([(2, 1), (-2, 1)])  # the flag symbol as 2D polyline
+    photo.add_lwpolyline([(-2, 1), (-2, -1)])  # the flag symbol as 2D polyline
+    photo.add_lwpolyline([(-2, -1), (2, -1)])  # the flag symbol as 2D polyline
+    photo.add_circle((0, 0), 1)  # mark the base point with a circle
+
+    recorrido = doc.blocks.new(name='RECORRIDO')
+
+    obj = doc.blocks.new(name='OBJECT')
+    obj.add_lwpolyline([(1, 0), (-1, 0)])  # the flag symbol as 2D polyline
+    obj.add_lwpolyline([(0, 1), (0, -1)])  # the flag symbol as 2D polyline
+    obj.add_circle((0, 0), 1)  # mark the base point with a circle
     
     msp = doc.modelspace()
-    firstloc = [0,0]
-    loc_scale = 1
 
     if photos == True:
-        photos_points = [dxfcoord(photopair.get_location(), firstloc, loc_scale) for photopair in ps.album.all()]
+        photos_points = [dxfcoord(photopair.get_location()) for photopair in ps.album.all()]
     object_points = []
     for photopair in ps.album.all():
         for obj in photopair.img.all():
-            obj_loc = obj.get_location() #.append(obj.objtype)
-            obj_loc.append(obj.objtype)
+            obj_loc = (dxfcoord(obj.get_location()), obj.objtype)#.append(obj.objtype)
             object_points.append(obj_loc)
-    scale = 0.00005
+    scale = 1
     if photos == True:
-        for point in photos_points:
-            msp.add_blockref('FLAG', point, dxfattribs={
-                'xscale': scale,
-                'yscale': scale,
-                'rotation': 0,
-                "layer": "Photos"
-            })
+        # for point in photos_points:
+        #     msp.add_blockref('PHOTO', point, dxfattribs={
+        #         'xscale': scale,
+        #         'yscale': scale,
+        #         'rotation': 0,
+        #         "layer": "Photos"
+        #     })
+        recorrido.add_lwpolyline(photos_points)
+        msp.add_lwpolyline(photos_points, dxfattribs={
+            "layer": "Photos"
+        })
+        # msp.add_blockref('RECORRIDO',photos_points[0],dxfattribs={
+        #     'xscale': 1,
+        #     'yscale': 1,
+        #     'rotation': 0,
+        #     "layer":  "Photos"
+        # })    
+
     for point in object_points:
-        msp.add_blockref('FLAG', point[:2], dxfattribs={
+        msp.add_blockref('OBJECT', point[0], dxfattribs={
             'xscale': scale,
             'yscale': scale,
-            'rotation': 90,
-            "layer": point[2]
+            'rotation': 45,
+            "layer": point[1]
         })
     doc.saveas(path)
 
-def dxfcoord(loc, trans, scale):
-    return [(loc[0] - trans[0])*scale, (loc[1] - trans[1])*scale]
+def dxfcoord(loc):
+    transformer = pyproj.Transformer.from_crs("EPSG:4326", "EPSG:32721") # ESTO SOLO FUNCIONA PARA UN PEDAZO DE ARGENTINA, HAY QUE CAMBIAR EL PARAMETRO DE LA DERECHA DEPENDIENDO DE LA UBICACION
+    return transformer.transform(loc[0], loc[1])
+
+

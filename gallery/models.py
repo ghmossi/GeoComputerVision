@@ -22,6 +22,8 @@ class PhotoSet(models.Model):
         return self.title
     
 class ParametersPhotoSet(models.Model):
+    statusDetection = models.CharField(max_length=100, null = True)
+    tasksId = models.CharField(max_length=200, null = True)
     countLuminaria = models.IntegerField()
     countPostacion = models.IntegerField()
     countVehiculos = models.IntegerField()
@@ -60,6 +62,7 @@ class StreetObject(models.Model):
     name = models.CharField(max_length=50)
     photo = models.ForeignKey(Photo_pair, related_name='img', on_delete=models.CASCADE)
     description = models.CharField(max_length=500, null = True)
+    photoset = models.ForeignKey(PhotoSet, related_name='album_streetobject', on_delete=models.CASCADE, null = True)
     location = models.ForeignKey(Location, related_name='location_object', on_delete=models.CASCADE, null=True)
     roi = models.ForeignKey(Roi, related_name='roi_object', on_delete=models.CASCADE, null=True)
     objtype = models.CharField(max_length=20, choices=ObjectType.choices, null=True, default=ObjectType.OTROS)

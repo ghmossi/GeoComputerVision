@@ -14,32 +14,34 @@
           <table class="table" id="tabla-datos" >
             <thead>
               <tr>
+                <th scope="col">Zd</th>
+                <th scope="col">Xd</th>
+                <th scope="col">Disp</th>
                 <th scope="col">x</th>
                 <th scope="col">y</th>
                 <th scope="col">w</th>
                 <th scope="col">h</th>
-                <th scope="col">zd</th>
-                <th scope="col">xd</th>
-                <th scope="col">disp</th>
                 <th scope="col">latitude</th>
                 <th scope="col">longitude</th>
                 <th scope="col">label</th>
+                <th scope="col">conf</th>
               </tr>
             </thead>
             <tbody>
               {% csrf_token %}
               {% for objectroi in objectsRoi %}
               <tr>
+                <td>{{objectroi.zdepth}} </td> 
+                <td>{{objectroi.xdepth}} </td> 
+                <td>{{objectroi.ddepth}} </td>
                 <td >{{objectroi.x}} </td>
                 <td>{{objectroi.y}} </td>
                 <td>{{objectroi.w}} </td>
                 <td>{{objectroi.h}} </td> 
-                <td>{{objectroi.zdepth}} </td> 
-                <td>{{objectroi.xdepth}} </td> 
-                <td>{{objectroi.ddepth}} </td>
                 <td>{{objectroi.latitude}} </td> 
                 <td>{{objectroi.longitude}} </td>
-                <td>{{objectroi.label}} </td>               
+                <td>{{objectroi.label}} </td>
+                <td>{{objectroi.conf}} </td>                
               </tr>
               {% endfor %}
               

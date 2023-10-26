@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-q)5q^@@04ten_tjuq^h7#svvtl++rrskr=oe2ko4z1&6r#y&1y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['198.168.0.145', 'localhost', '127.0.0.1','192.168.1.220','10.87.10.10']
+ALLOWED_HOSTS = ['198.168.0.145', 'localhost', '127.0.0.1','192.168.1.220']
 
 # Application definition
 
@@ -141,5 +141,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR ,'media')
 LOGIN_REDIRECT_URL = 'gallery:index'
 LOGOUT_REDIRECT_URL = 'login'
 
+CELERY_BROKER_URL = 'amqp://localhost'
+BROKER_POOL_LIMIT = None
 
 

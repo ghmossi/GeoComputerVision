@@ -32,11 +32,11 @@ var canvas = document.getElementById("canvas");
     var selectTwoROI=false;
   
     var imageWidth=900;
-    //var imageWidthOriginal=2666;
-    var imageWidthOriginal=1333;
+    var imageWidthOriginal=2666;
+    //var imageWidthOriginal=1333;
     var imageHeight=675;
-    //var imageHeightOriginal=2000;
-    var imageHeightOriginal=1000;
+    var imageHeightOriginal=2000;
+    //var imageHeightOriginal=1000;
     var factorX=imageWidth/imageWidthOriginal;
     var factory=imageHeight/imageHeightOriginal;
 
