@@ -21,6 +21,7 @@ import os
 import geopandas as gpd
 from yolov.models.experimental import attempt_load
 from yolov.utils.torch_utils import select_device
+from django.core import serializers
 
 from multiprocessing import Process
 import time
@@ -51,9 +52,10 @@ class ImageMapView(generic.ListView):
         context = super(ImageMapView, self).get_context_data(**kwargs)
         ps = PhotoSet.objects.get(id = self.kwargs['pk'])
         context['location'] = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=self.kwargs['pk2']).location
-        
+        context['location_next'] = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=self.kwargs['pk2']+10).location
         data_list = []
         data_list2 = []
+        
         for obj2 in Photo_pair.objects.filter(photoset = ps).all():
             data_dict = {
                     'latitude': obj2.location.latitude,
@@ -63,16 +65,18 @@ class ImageMapView(generic.ListView):
                     'url': obj2.image_r.url
                 }
             data_list.append(data_dict)
-            for object2 in StreetObject.objects.filter(photo = obj2):
+        context['data'] = json.dumps(data_list) 
+
+        for object2 in StreetObject.objects.filter(photoset = PhotoSet.objects.get(id=self.kwargs['pk'])).all():
                 data_dict2 = {
                     'latitude': object2.location.latitude,
                     'longitude': object2.location.longitude,
-                    'index': obj2.index,
+                    'index': object2.photo.index,
                     'tipo': object2.objtype
                 }
                 data_list2.append(data_dict2)
-        context['data'] = json.dumps(data_list)
         context['data2'] = json.dumps(data_list2)
+
         data_list3 = []
         data_dict3 = {
                     'latitude': context['location'].latitude,
@@ -82,6 +86,29 @@ class ImageMapView(generic.ListView):
                 }
         data_list3.append(data_dict3)
         context['data3'] = json.dumps(data_list3)
+
+        index=self.kwargs['pk2']
+        location=Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=self.kwargs['pk2']).location
+        location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=index+10).location
+        azimuthCurrent=Azimuth(location.latitude,location.longitude,location_next.latitude,location_next.longitude)
+        location_next10 = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=index+20).location
+        azimuthNext10=Azimuth(location_next.latitude,location_next.longitude,location_next10.latitude,location_next10.longitude)
+        if abs(azimuthCurrent - azimuthNext10) <= 3:
+            context['location_next']=location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=index+10).location    
+            print("DIFERENCIA: ",str(abs(azimuthCurrent - azimuthNext10)))
+        else:
+            print("DIFERENCIA: ",str(abs(azimuthCurrent - azimuthNext10)))
+            context['location_next']=location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=index+2).location
+        data_list4 = []
+        data_dict4 = {
+                    'latitude': context['location_next'].latitude,
+                    'longitude': context['location_next'].longitude,
+                    'dataset': self.kwargs['pk'],
+
+                    'photoindex': self.kwargs['pk2'],
+                }
+        data_list4.append(data_dict4)
+        context['data4'] = json.dumps(data_list4)
         return context
     def get_queryset(self):
         return Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=self.kwargs['pk2'])
@@ -138,7 +165,7 @@ def upload_images(request):
                 ind = Photo_pair.objects.filter(photoset = ps).latest('index').index + 1
             except:
                 ind = 0
-            ParametersPhotoSet.objects.create(photoset=ps, countLuminaria=0,countPostacion=0,countVehiculos=0,countOtros=0,lastPhotoDetect=0)
+                ParametersPhotoSet.objects.create(photoset=ps, countLuminaria=0,countPostacion=0,countVehiculos=0,countOtros=0,lastPhotoDetect=0)
             for img in images:
                 Photo_pair.objects.create(image_r = img[0], image_l = img[1], photoset=ps, index = ind)
                 currentphotopair = ps.album.get(index=ind) 
@@ -192,7 +219,7 @@ class SelectROIView(generic.FormView):
         if self.kwargs['pk2']==0:
             context['location_next'] = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=self.kwargs['pk2']).location
         else:
-            context['location_next'] = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=self.kwargs['pk2']+3).location
+            context['location_next'] = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=self.kwargs['pk2']+10).location
         
         return context
     def form_valid(self, form):
@@ -247,7 +274,9 @@ def deleteallobjects(request):
     print("PK2")
     print(pk2)
     print(pk)
-    parametrosPS=ParametersPhotoSet.objects.get(photoset=pk)
+ 
+    parametrosPS=ParametersPhotoSet.objects.get(photoset=ps)
+    
     parametrosPS.countLuminaria=0
     parametrosPS.countPostacion=0
     parametrosPS.countVehiculos=0
@@ -361,13 +390,11 @@ class DetectObjectViewManual(generic.ListView):
         except:
             context['map'] = "Esta imagen no posee coordenadas"
         #context['map'] =map
-        cv2.imwrite('./media/detect.jpg', imagen)
-        context['objectdetect'] ='/media/detect.jpg'
+        #cv2.imwrite('./media/detect.jpg', imagen)
+        #context['objectdetect'] ='/media/detect.jpg'
         
         return context
     
-    #def get_queryset(self):     
-     #   return Photo_pair.objects.filter(photoset = [PhotoSet.objects.get(id = self.kwargs['pk'])]).get(index=self.kwargs['pk2'])
     def get_success_url(self):
         return reverse("gallery:detectobject", kwargs={'pk': self.kwargs['pk'],'pk2': self.kwargs['pk2']})
 
@@ -398,13 +425,10 @@ class DetectObjectView(generic.ListView):
         
         return context
     
-    #def get_queryset(self):     
-     #   return Photo_pair.objects.filter(photoset = [PhotoSet.objects.get(id = self.kwargs['pk'])]).get(index=self.kwargs['pk2'])
     def get_success_url(self):
         return reverse("gallery:detectobject", kwargs={'pk': self.kwargs['pk'],'pk2': self.kwargs['pk2']})
 
 def distanceObjects(request):
-    print("PASA POR ZDEPTH")
     urlRight = request.GET.get('urlRight')
     urlLeft = request.GET.get('urlLeft')
     xRight = request.GET.get('xRight')
@@ -422,7 +446,6 @@ def distanceObjects(request):
     return JsonResponse({'distance':distance})
 
 def zdepth(request):
-    #print("PASA POR ZDEPTH")
     urlRight = request.GET.get('urlRight')
     urlLeft = request.GET.get('urlLeft')
     xRight = request.GET.get('xRight')
@@ -464,25 +487,25 @@ def objectselec(request):
 
     return JsonResponse({'map':map})
 
-def get_map(request):
-    object = int(request.GET.get('object'))
-    pk = request.GET.get('pk')
-    pk2 = request.GET.get('pk2')
-    ps = PhotoSet.objects.get(id = pk)
-    print(object)
-    pho = False
-    try:
-        lay = []
-        if object & 16: pho = True
-        if object & 8: lay.append(StreetObject.ObjectType.POSTACION)
-        if object & 4: lay.append(StreetObject.ObjectType.LUMINARIA)
-        if object & 2: lay.append(StreetObject.ObjectType.VEHICULO)
-        if object & 1: lay.append(StreetObject.ObjectType.OTROS)
-        m = generate_map(ps = ps, ind=pk2,photos= pho, layers=lay)
-        map = m._repr_html_()
-    except:
-        map = "Esta imagen no posee coordenadas"
-    return JsonResponse({'map':map})
+#def get_map(request):
+#    object = int(request.GET.get('object'))
+#    pk = request.GET.get('pk')
+#    pk2 = request.GET.get('pk2')
+#    ps = PhotoSet.objects.get(id = pk)
+#    print(object)
+#    pho = False
+#    try:
+#        lay = []
+#        if object & 16: pho = True
+#        if object & 8: lay.append(StreetObject.ObjectType.POSTACION)
+#        if object & 4: lay.append(StreetObject.ObjectType.LUMINARIA)
+#        if object & 2: lay.append(StreetObject.ObjectType.VEHICULO)
+#        if object & 1: lay.append(StreetObject.ObjectType.OTROS)
+#        m = generate_map(ps = ps, ind=pk2,photos= pho, layers=lay)
+#        map = m._repr_html_()
+#    except:
+#        map = "Esta imagen no posee coordenadas"
+#    return JsonResponse({'map':map})
 
                     
 def startdetection(request):
@@ -540,7 +563,7 @@ def updateprogressmapa(request):
     try:
         #m = generate_map(ps = ps, ind=pk2,photos= pho, layers=lay)
         lay = []
-        m = generate_map(ps = ps, ind=pk2,photos= False)
+        m = generate_map(ps = pk, ind=pk2,photos= False)
         map = m._repr_html_()
     except:
         map = "Esta imagen no posee coordenadas"

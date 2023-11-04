@@ -1,1 +1,0 @@
-el archivo best.pt tiene que ir en la carpeta yolov7

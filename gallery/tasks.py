@@ -27,29 +27,28 @@ def mitarea(pk,pk2,total):
         ps = PhotoSet.objects.get(id = pk)
         pk2=pk2+1
         objectdetectroi=[]
-        ps = PhotoSet.objects.get(id = pk)
         device=''
         device = select_device(device)
         weights='./yolov/best.pt'
         modelo = attempt_load(weights, map_location=device)  # load FP32 model
-        parametrosPS=ParametersPhotoSet.objects.get(photoset=pk)
-        parametrosPS.lastPhotoDetect=0
-        parametrosPS.save()
+        #parametrosPS=ParametersPhotoSet.objects.get(photoset=pk)
+        #current=
+        #parametrosPS.lastPhotoDetect=0
+        #parametrosPS.save()
         fin=total-1
-        inicio=int(pk2)+0
+        inicio=pk2
         imageWidth=2666;
         imageHeight=2000;
         maxWidth=imageWidth*0.9
         minWidth=imageWidth-maxWidth
         maxHeight=imageHeight*0.75
         minDepth=6
-        maxDepth=15
-        minDistance=2.5
+        maxDepth=13
+        minDistance=3.5
         for current in range(inicio, fin):
-            parametrosPS=ParametersPhotoSet.objects.get(photoset=int(pk))
+            parametrosPS=ParametersPhotoSet.objects.get(photoset=pk)
             if parametrosPS.statusDetection=="stopped": 
                 break
-            parametrosPS=ParametersPhotoSet.objects.get(photoset=pk)
             parametrosPS.lastPhotoDetect=current+1
             parametrosPS.save()
             location = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=current).location
@@ -57,17 +56,32 @@ def mitarea(pk,pk2,total):
             image_r=(photopair.image_r)
             image_l=(photopair.image_l)
             imagen,objectsRoi,objectLabel,objectconf=detect(image_r,modelo)
-            #location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=current+10).location
+            
+            location=Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=current).location
+            location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=current+10).location
+            azimuthCurrent=Azimuth(location.latitude,location.longitude,location_next.latitude,location_next.longitude)
+            location5=Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=current+5).location
+            location_next5 = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=current+15).location
+            azimuthCurrent5=Azimuth(location5.latitude,location5.longitude,location_next5.latitude,location_next5.longitude)
+            if abs(azimuthCurrent - azimuthCurrent5) <= 10:
+                print("DIFERENCIA: ",str(abs(azimuthCurrent - azimuthCurrent5)))
+                indexNext=current+10
+            else:
+                print("DIFERENCIA: ",str(abs(azimuthCurrent - azimuthCurrent5)))
+                indexNext=current+5
+
             for objeto,label,conf in zip(objectsRoi,objectLabel,objectconf):
                 # pongo finltro para descartar clases a detectar
                 if label !="luminaria":
                     try:
                         zdepth,xdepth,ddepth=depthwithframes(objeto.x,objeto.y,objeto.w,objeto.h,"/media/"+str(image_r),"/media/"+str(image_l)) 
+                        
                         if current < (fin-10):
-                            location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=current+10).location
+                            location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=indexNext).location
                             lat_new,lon_new=LatitudeLongitude(location.latitude,location.longitude,location_next.latitude,location_next.longitude,zdepth,xdepth)
                         else:
-                            location_previus = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=current-10).location
+                            indexNext=current-10
+                            location_previus = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = pk)).get(index=indexNext).location
                             lat_new,lon_new=LatitudeLongitude(location_previus.latitude,location_previus.longitude,location.latitude,location.longitude,zdepth,xdepth)
              
                         if zdepth<=maxDepth and zdepth>= minDepth and objeto.x>minWidth and objeto.x<maxWidth and objeto.y<maxHeight:

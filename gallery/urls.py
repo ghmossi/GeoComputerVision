@@ -12,7 +12,7 @@ urlpatterns = [
     path('delete_set/', delete_set, name='deleteset'),
     path('download_dxf/', download_dxf, name='downloaddxf'),
     path('images/<int:pk>/<int:pk2>/', login_required(views.ImageMapView.as_view()), name='image2'),
-    path('images/old/<int:pk>/<int:pk2>/', login_required(views.ImageMapViewOld.as_view()), name='imagemapold'),
+    #path('images/old/<int:pk>/<int:pk2>/', login_required(views.ImageMapViewOld.as_view()), name='imagemapold'),
     path('images/<int:pk>/<int:pk2>/selectroi/', login_required(views.SelectROIView.as_view()), name='selectroi'),
     path('modal/<int:pk>/<int:pk2>/<int:pk3>/', login_required(views.AddAttributeView.as_view()), name='addattribute'),
     path('modal/<int:pk>/delete/', login_required(views.DeleteStreetObjectView.as_view()), name='deletestreetobject'),
@@ -29,7 +29,7 @@ urlpatterns = [
     path('stopdetection/', views.stopdetection, name='stopdetection'),
     path('updateprogress/', updateprogress, name='updateprogress'),
     path('updateprogressmapa/', updateprogressmapa, name='updateprogressmapa'),
-    path('get_map/', get_map, name='getmap'),
+    #path('get_map/', get_map, name='getmap'),
 
     
 ]

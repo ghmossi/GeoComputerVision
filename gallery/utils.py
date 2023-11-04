@@ -11,26 +11,20 @@ import pyproj
 
 def generate_map(ps,ind, photos = True, layers = [StreetObject.ObjectType.OTROS, StreetObject.ObjectType.POSTACION, StreetObject.ObjectType.LUMINARIA]):
     color_options = ['beige', 'black', 'blue', 'cadetblue', 'darkblue', 'darkgreen', 'darkpurple', 'darkred', 'gray', 'green', 'lightblue', 'lightgray', 'lightgreen', 'lightred', 'orange', 'pink', 'purple', 'white']
-    currentphotopair = ps.album.get(index=ind) 
-    loc = currentphotopair.get_location()
+    lastObject=StreetObject.objects.filter(photoset = PhotoSet.objects.get(id=ps)).last()
+    loc = lastObject.get_location()
     m = folium.Map(location = loc,zoom_start = 18,control_scale=True,max_zoom=19)
     icon_red = folium.Icon(icon="user", icon_color='white', color="red", prefix="fa")
     folium.Marker(location = loc, icon=icon_red).add_to(m)    
-    for photo_pair in ps.album.all():
-        if photos == True:
-            if photo_pair != ps.album.get(index=ind):
-                loc_photo = photo_pair.get_location()
-                icon_photo = folium.Icon(icon="eye", icon_color='white', color='blue', prefix="fa")
-                popup2image = folium.Popup(html='<a href=' + reverse('gallery:image2', kwargs={'pk': ps.id, 'pk2':photo_pair.index})  +' target="_top">Ir a la imagen<a>')
-                folium.Marker(location = loc_photo, icon = icon_photo, popup = popup2image).add_to(m)
-        for object in photo_pair.img.all():
+    
+    for object in StreetObject.objects.filter(photoset = PhotoSet.objects.get(id=ps)).all():
             for layer in layers:
                 #layer_color=random.choice(color_options)
                 #color_options.remove(layer_color)
                 if layer ==StreetObject.ObjectType.OTROS: 
-                    layer_color='darkgreen'
-                if layer ==StreetObject.ObjectType.POSTACION: 
                     layer_color='darkpurple'
+                if layer ==StreetObject.ObjectType.POSTACION: 
+                    layer_color='green'
                 if layer ==StreetObject.ObjectType.LUMINARIA: 
                     layer_color='orange'
                 if layer ==StreetObject.ObjectType.VEHICULO: 
@@ -38,7 +32,7 @@ def generate_map(ps,ind, photos = True, layers = [StreetObject.ObjectType.OTROS,
                 icon_layer = folium.Icon(icon="tower-broadcast", icon_color='white', color=layer_color, prefix="fa")
                 if object.objtype == layer:
                     loc_object = object.get_location()
-                    popup2image = folium.Popup(html= object.name +'<br>'+ object.description+'<br>'+'<a href=' + reverse('gallery:image2', kwargs={'pk': ps.id, 'pk2':photo_pair.index})  +' target="_top">Ir a la imagen<a>')
+                    popup2image = folium.Popup(html= object.name +'<br>'+ object.description)
                     folium.Marker(location = loc_object, icon = icon_layer, popup = popup2image).add_to(m)
     return m
 
@@ -123,7 +117,7 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
     w=int(w)
     h=int(h)
     cv2.rectangle(Right_nice, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    cv2.imwrite('./Right_nice.jpg', Right_nice)
+    #cv2.imwrite('./Right_nice.jpg', Right_nice)
     roi=Right_nice[y:y+h, x:x+w]
     xR=x+round(w/2)
     yR=y+round(h/2)
@@ -137,7 +131,7 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
     x, y = max_loc
     cv2.rectangle(Left_nice, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    cv2.imwrite('./Left_nice.jpg', Left_nice)
+    #cv2.imwrite('./Left_nice.jpg', Left_nice)
     xL=x+round(w/2)
     yL=y+round(h/2)
     frame_rate = 1    #Camera frame rate (maximum at 120 fps)
@@ -152,12 +146,10 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
     circles_right =(xR,yR)
     circles_left =(xL,yL)
 
-
     disparity = find_depth(circles_right,circles_left,Right_nice, Left_nice, B, f, alpha)
     #image_width =2666
     image_width =2666
     alpha=120
-    print("///////////////")
     #print("Disparity: ",disparity)
     cuadrante=image_width/2
     if xR<cuadrante:
@@ -227,6 +219,19 @@ def DisparityDepth_1333x1000(disp):
         depth=(disp-b)/m
     return depth
 
+def Azimuth(lat,lon,lat_next,lon_next):
+    A = (float(lat),float(lon))
+    B = (float(lat_next),float(lon_next))
+    #Define the ellipsoid
+    geod = Geodesic.WGS84
+    #Solve the Inverse problem
+    inv = geod.Inverse(A[0],A[1],B[0],B[1])
+    #deno sumarle angulo al azimut desde 90 a -90
+    azi1 = (inv['azi1'])
+    print('Initial Azimuth from A to B = ' + str(azi1))
+    return azi1
+
+
 def LatitudeLongitude(lat,lon,lat_next,lon_next,z,x):
     A = (float(lat),float(lon))
     B = (float(lat_next),float(lon_next))
@@ -240,7 +245,7 @@ def LatitudeLongitude(lat,lon,lat_next,lon_next,z,x):
     inv = geod.Inverse(A[0],A[1],B[0],B[1])
     #deno sumarle angulo al azimut desde 90 a -90
     azi1 = (inv['azi1'])
-    #print('Initial Azimuth from A to B = ' + str(azi1))
+    print('Initial Azimuth from A to B = ' + str(azi1))
 
     #Solve the Direct problem
     dir = geod.Direct(A[0],A[1],azi1,s)

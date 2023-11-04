@@ -3,8 +3,9 @@ function loadJson(selector) {
 }
 
 var jsonPhotos = loadJson('#jsonData'); // lista que tiene cada objeto 'latitude': obj2.location.latitude,'longitude': obj2.location.longitude,'index': obj2.index,'tipo': "photo"
-var jsonPostes = loadJson('#jsonData2');
+var jsonObjetos = loadJson('#jsonData2');
 var photocurrent = loadJson('#jsonData3');
+var photonext = loadJson('#jsonData4');
 
 var checkphotos = document.getElementById('checkphotos');
 var checkposts = document.getElementById('checkposts');
@@ -26,7 +27,12 @@ var map;
 
 function addMarkers(layer, positions, icon, tipo, current) {
   layer.clearLayers();
-  for (var i = 0; i < positions.length; i++) {
+  var CountSeparate=1;
+  if(tipo=="photo"){
+      CountSeparate=10
+  }
+  console.log("CountSeparate: "+CountSeparate)
+  for (var i = 0; i < positions.length; i=i+CountSeparate) {
     if(tipo==positions[i].tipo && i != current){
       var popupContent = "<button onclick='jumpto(" + positions[i].index +  ")' class='btn btn-secondary'>Go to photo</button>";
       createMarker([positions[i].latitude,positions[i].longitude], icon).addTo(layer).bindPopup(popupContent);
@@ -34,7 +40,23 @@ function addMarkers(layer, positions, icon, tipo, current) {
   }
 }
 
-function addCurrentMarker(layer, position, icon) {
+
+
+function addCurrentMarker(layer, position,positionnext, icon,icon2) {
+  layer.clearLayers();
+  var latlngs = Array();
+  marker1=createMarker([position.latitude,position.longitude], icon)
+  marker2=createMarker([positionnext.latitude,positionnext.longitude], icon2)
+  //Get latlng from first marker
+  latlngs.push(marker1.getLatLng());
+  //Get latlng from first marker
+  latlngs.push(marker2.getLatLng());
+  var popupContent = "<b>Current photo: </b>" + currentindex;
+  createMarker([position.latitude,position.longitude], icon).addTo(layer).bindPopup(popupContent);
+  return latlngs
+}
+
+function addCurrentMarker2(layer, position, icon) {
   layer.clearLayers();
   var popupContent = "<b>Current photo: </b>" + currentindex;
   createMarker([position.latitude,position.longitude], icon).addTo(layer).bindPopup(popupContent);
@@ -110,8 +132,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Agregar marcadores iniciales
   updatemarkers(markersLayer1, jsonPhotos, blueIcon, "photo");
-  addCurrentMarker(mainLayer, photocurrent[0], redIcon);
-
+  var latlngs =addCurrentMarker(mainLayer, photocurrent[0],photonext[0], redIcon,blueIcon);
+  var polyline = L.polyline(latlngs, {color: 'gray'}).addTo(map)
+  //map.fitBounds(polyline.getBounds());
   updateall(map, currentindex);
   
   checkphotos.addEventListener('change', function () {
@@ -124,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   checkposts.addEventListener('change', function () {
       if (this.checked) {
-        updatemarkers(markersLayer2, jsonPostes,greenIcon, "postacion");
+        updatemarkers(markersLayer2, jsonObjetos,greenIcon, "postacion");
       } else {
         markersLayer2.clearLayers();
       }
@@ -132,7 +155,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   checklights.addEventListener('change', function () {
     if (this.checked) {
-      updatemarkers(markersLayer3, jsonPostes ,orangeIcon, "luminaria");
+      updatemarkers(markersLayer3, jsonObjetos ,orangeIcon, "luminaria");
     } else {
       markersLayer3.clearLayers();
     }
@@ -146,7 +169,10 @@ document.addEventListener("DOMContentLoaded", function () {
     else{
       markersLayer1.clearLayers();
     }
-    addCurrentMarker(mainLayer, jsonPhotos[currentindex], redIcon);
+   //addCurrentMarker(mainLayer, jsonPhotos[currentindex], redIcon);
+    var latlngs =addCurrentMarker(mainLayer, jsonPhotos[currentindex],jsonPhotos[currentindex+2], redIcon,blueIcon);
+    var polyline = L.polyline(latlngs, {color: 'gray'}).addTo(map)
+    //map.fitBounds(polyline.getBounds());
     updateall(map, currentindex);
   });
 
@@ -158,9 +184,14 @@ document.addEventListener("DOMContentLoaded", function () {
     else{
       markersLayer1.clearLayers();
     }
-    addCurrentMarker(mainLayer, jsonPhotos[currentindex], redIcon);
+    //addCurrentMarker(mainLayer, jsonPhotos[currentindex], redIcon);
+    var latlngs =addCurrentMarker(mainLayer, jsonPhotos[currentindex],jsonPhotos[currentindex+2], redIcon,blueIcon);
+    var polyline = L.polyline(latlngs, {color: 'gray'}).addTo(map)
+    //map.fitBounds(polyline.getBounds());
     updateall(map, currentindex);
   });
 
 });
+
+
 
