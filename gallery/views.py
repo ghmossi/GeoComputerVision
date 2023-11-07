@@ -95,9 +95,9 @@ class ImageMapView(generic.ListView):
         azimuthNext10=Azimuth(location_next.latitude,location_next.longitude,location_next10.latitude,location_next10.longitude)
         if abs(azimuthCurrent - azimuthNext10) <= 3:
             context['location_next']=location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=index+10).location    
-            print("DIF AZIMUTH: ",str(abs(azimuthCurrent - azimuthNext10)))
+            print("DIF_AZIMUTH: ",str(abs(azimuthCurrent - azimuthNext10)))
         else:
-            print("DIF AZIMUTH: ",str(abs(azimuthCurrent - azimuthNext10)))
+            print("DIF_AZIMUTH: ",str(abs(azimuthCurrent - azimuthNext10)))
             context['location_next']=location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=index+2).location
         data_list4 = []
         data_dict4 = {
