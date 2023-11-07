@@ -6,4 +6,5 @@ Right_nice.jpg
 db.sqlite3
 *.sqlite3
 media/*
+nohup.out
 *.out
