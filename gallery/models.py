@@ -56,7 +56,7 @@ class StreetObject(models.Model):
     class ObjectType(models.TextChoices):
         POSTACION = "postacion"
         LUMINARIA = "luminaria"
-        VEHICULO = "vehiculo"
+        PROPIEDADES = "propiedades"
         OTROS = "otros"
 
     name = models.CharField(max_length=50)

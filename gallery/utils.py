@@ -10,7 +10,7 @@ from geographiclib.geodesic import Geodesic
 import pyproj
 
 def generate_map(ps,ind, photos = True, layers = [StreetObject.ObjectType.OTROS, StreetObject.ObjectType.POSTACION, StreetObject.ObjectType.LUMINARIA]):
-    color_options = ['beige', 'black', 'blue', 'cadetblue', 'darkblue', 'darkgreen', 'darkpurple', 'darkred', 'gray', 'green', 'lightblue', 'lightgray', 'lightgreen', 'lightred', 'orange', 'pink', 'purple', 'white']
+    color_options = ['beige','yellow', 'black', 'blue', 'cadetblue', 'darkblue', 'darkgreen', 'darkpurple', 'darkred', 'gray', 'green', 'lightblue', 'lightgray', 'lightgreen', 'lightred', 'orange', 'pink', 'purple', 'white']
     lastObject=StreetObject.objects.filter(photoset = PhotoSet.objects.get(id=ps)).last()
     loc = lastObject.get_location()
     m = folium.Map(location = loc,zoom_start = 18,control_scale=True,max_zoom=19)
@@ -22,13 +22,13 @@ def generate_map(ps,ind, photos = True, layers = [StreetObject.ObjectType.OTROS,
                 #layer_color=random.choice(color_options)
                 #color_options.remove(layer_color)
                 if layer ==StreetObject.ObjectType.OTROS: 
-                    layer_color='darkpurple'
+                    layer_color='black'
                 if layer ==StreetObject.ObjectType.POSTACION: 
                     layer_color='green'
                 if layer ==StreetObject.ObjectType.LUMINARIA: 
                     layer_color='orange'
-                if layer ==StreetObject.ObjectType.VEHICULO: 
-                    layer_color='black'               
+                if layer ==StreetObject.ObjectType.PROPIEDADES: 
+                    layer_color='yellow'               
                 icon_layer = folium.Icon(icon="tower-broadcast", icon_color='white', color=layer_color, prefix="fa")
                 if object.objtype == layer:
                     loc_object = object.get_location()
@@ -316,7 +316,7 @@ def generate_DXF(path,ps):
     doc.layers.add(name="Photos", color=7)
     doc.layers.add(name=StreetObject.ObjectType.POSTACION, color=6)
     doc.layers.add(name=StreetObject.ObjectType.LUMINARIA, color=5)
-    doc.layers.add(name=StreetObject.ObjectType.VEHICULO, color=4)
+    doc.layers.add(name=StreetObject.ObjectType.PROPIEDADES, color=4)
     doc.layers.add(name=StreetObject.ObjectType.OTROS, color=3)
 
     photo = doc.blocks.new(name='PHOTO')

@@ -4,3 +4,6 @@ detect.jpg
 Left_nice.jpg
 Right_nice.jpg
 db.sqlite3
+*.sqlite3
+media/*
+*.out

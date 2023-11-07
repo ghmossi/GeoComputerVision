@@ -10,6 +10,8 @@ var photonext = loadJson('#jsonData4');
 var checkphotos = document.getElementById('checkphotos');
 var checkposts = document.getElementById('checkposts');
 var checklights = document.getElementById('checklights');
+var checkpropiedades = document.getElementById('checkpropiedades');
+var checkothers = document.getElementById('checkothers');
 var btn_next = document.getElementById('btn-next');
 var btn_prev = document.getElementById('btn-prev');
 var image = document.getElementById('image');
@@ -100,10 +102,14 @@ document.addEventListener("DOMContentLoaded", function () {
   var markersLayer1 = L.layerGroup();
   var markersLayer2 = L.layerGroup();
   var markersLayer3 = L.layerGroup();
+  var markersLayer4 = L.layerGroup();
+  var markersLayer5 = L.layerGroup();
   map.addLayer(mainLayer);
   map.addLayer(markersLayer1);
   map.addLayer(markersLayer2);
   map.addLayer(markersLayer3);
+  map.addLayer(markersLayer4);
+  map.addLayer(markersLayer5);
 
   var greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
@@ -123,6 +129,18 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   var orangeIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconAnchor: [12, 41]
+  });
+
+  var blackIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-black.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconAnchor: [12, 41]
+  });
+
+  var yellowIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconAnchor: [12, 41]
   });
@@ -160,6 +178,23 @@ document.addEventListener("DOMContentLoaded", function () {
       markersLayer3.clearLayers();
     }
   });
+
+  checkpropiedades.addEventListener('change', function () {
+    if (this.checked) {
+      updatemarkers(markersLayer4, jsonObjetos ,yellowIcon, "propiedades");
+    } else {
+      markersLayer4.clearLayers();
+    }
+  });
+
+  checkothers.addEventListener('change', function () {
+    if (this.checked) {
+      updatemarkers(markersLayer5, jsonObjetos ,blackIcon, "otros");
+    } else {
+      markersLayer5.clearLayers();
+    }
+  });
+  
 
   btn_prev.addEventListener('click', function () {
     currentindex = Math.max(currentindex - 1, 0);
