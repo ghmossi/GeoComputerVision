@@ -21,7 +21,6 @@ import os
 import geopandas as gpd
 from yolov.models.experimental import attempt_load
 from yolov.utils.torch_utils import select_device
-from django.core import serializers
 
 from multiprocessing import Process
 import time
