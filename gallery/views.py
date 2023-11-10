@@ -372,13 +372,14 @@ class DetectObjectViewManual(generic.ListView):
         #pilaLocation = Pila()
         for objeto,label,conf in zip(objectsRoi,objectLabel,objectconf):
             zdepth,xdepth,ddepth=depthwithframes(objeto.x,objeto.y,objeto.w,objeto.h,"/media/"+str(image_r),"/media/"+str(image_l))
-            lat_new,lon_new=LatitudeLongitude(context['location'].latitude,context['location'].longitude,context['location_next'].latitude,context['location_next'].longitude,zdepth,xdepth)
+            loc,azimuth=LatitudeLongitude2(ps,self.kwargs['pk2'],zdepth,xdepth,15)
+            #lat_new,lon_new=LatitudeLongitude(context['location'].latitude,context['location'].longitude,context['location_next'].latitude,context['location_next'].longitude,zdepth,xdepth)
             if zdepth<=maxDepth and zdepth>= minDepth and objeto.x>minWidth and objeto.x<maxWidth and objeto.y<maxHeight:
                 
                 #currentphoto=Photo_pair.objects.filter(photoset = ps).get(index=self.kwargs['pk2']-(i+1))
                 context['photopair'] = Photo_pair.objects.filter(photoset = ps).get(index=self.kwargs['pk2'])
                 context['objetos'] = StreetObject.objects.filter(photo = context['photopair'])
-                obj = ObjectDetectRois(objeto.x,objeto.y,objeto.w,objeto.h,zdepth,xdepth,ddepth,lat_new,lon_new,label,conf)
+                obj = ObjectDetectRois(objeto.x,objeto.y,objeto.w,objeto.h,zdepth,xdepth,ddepth,loc[0],loc[1],label,conf)
                 objectdetectroi.append(obj)
             
         context['objectsRoi'] =objectdetectroi
@@ -390,8 +391,8 @@ class DetectObjectViewManual(generic.ListView):
         except:
             context['map'] = "Esta imagen no posee coordenadas"
         #context['map'] =map
-        #cv2.imwrite('./media/detect.jpg', imagen)
-        #context['objectdetect'] ='/media/detect.jpg'
+        cv2.imwrite('./media/temp/detect.jpg', imagen)
+        context['objectdetect'] ='/media/temp/detect.jpg'
         
         return context
     
@@ -456,12 +457,19 @@ def zdepth(request):
     lon = request.GET.get('lon')
     lat_next = request.GET.get('lat_next')
     lon_next = request.GET.get('lon_next')
+    pk = request.GET.get('pk')
+    pk2 = request.GET.get('pk2')
     zdepth,x,disp=depthwithframes(xRight,yRight,wRight,hRight,urlRight,urlLeft)
     lat_new=0
     lon_new=0
-    lat_new,lon_new=LatitudeLongitude(lat,lon,lat_next,lon_next,zdepth,x)
+    ps = PhotoSet.objects.get(id = pk)
+    pk2=int(pk2)
+    #lat_new,lon_new=LatitudeLongitude(lat,lon,lat_next,lon_next,zdepth,x)
+    loc,azimuth=LatitudeLongitude2(ps,pk2,zdepth,x,15)
+    print("ps: ",ps)
+    print("pk2: ",pk2)
     print(zdepth,x,disp)
-    return JsonResponse({'zdepth':zdepth,'x':x,'disp':disp,'lat_new':lat_new,'lon_new':lon_new})
+    return JsonResponse({'zdepth':zdepth,'x':x,'disp':disp,'lat_new':loc[0],'lon_new':loc[1]})
 
 def objectselec(request):
     print("PASA POR OBEJTODATA")
@@ -552,7 +560,8 @@ def updateprogress(request):
         progress=round((actual*100)/int(total))
         return JsonResponse({'progress':progress})
     
-    return JsonResponse({'text':"Proceso terminado"})
+    if parametrosPS.statusDetection == "terminated":
+        return JsonResponse({'text':"Proceso terminado"})
 
 
 def updateprogressmapa(request):

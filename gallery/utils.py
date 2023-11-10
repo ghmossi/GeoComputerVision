@@ -146,7 +146,7 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
     circles_right =(xR,yR)
     circles_left =(xL,yL)
 
-    disparity = find_depth(circles_right,circles_left,Right_nice, Left_nice, B, f, alpha)
+    disparidad = find_depth(circles_right,circles_left,Right_nice, Left_nice, B, f, alpha)
     #image_width =2666
     image_width =2666
     alpha=120
@@ -157,7 +157,7 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
         grados = round(beta, 2)
         rad=math.radians(grados)
         ##print("cos a: ",math.cos(rad))
-        #disparity = disparity *(1/math.cos(rad))
+        disparity = disparidad *(math.cos(rad))
         phi=math.radians(-90+(grados))
         ##print("Grados: ",grados*-1)
         ##print("Disparity: ",disparity)
@@ -167,17 +167,19 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
         grados = round(beta, 2)
         rad=math.radians(grados)
         ##print("cos a: ",math.cos(rad))
-        #disparity = disparity * (math.cos(rad))
+        disparity = disparidad * (math.cos(rad))
         ##print("Grados: ",grados)
         ##print("Disparity: ",disparity)
        
 
     if xR==cuadrante:
         grados=0
+        disparity=disparidad
         ##print("Grados: ",grados)
         ##print("Disparity: ",disparity)
-
-    zdepth=DisparityDepth(disparity)
+    
+    disparity=int(round(disparity,0))
+    zdepth=DisparityDepth(disparidad)
     if xR>cuadrante:
         x=math.sin(math.radians (grados))*zdepth
     if xR<cuadrante:
@@ -185,8 +187,9 @@ def depthwithframes(x,y,w,h, frame_right,frame_left):
     if xR==cuadrante:
         x=0
     x=x*math.cos(math.radians (55)-math.radians (grados))
+    
+    zdepth=DisparityDepth(disparity)
     print("zdepth: ",zdepth," x: ",x," disparity: ",disparity)
-
     return round(zdepth,1),round(x,1),round(disparity,0) 
 
 def DisparityDepth(disp):
@@ -219,51 +222,6 @@ def DisparityDepth_1333x1000(disp):
         depth=(disp-b)/m
     return depth
 
-def Azimuth(lat,lon,lat_next,lon_next):
-    A = (float(lat),float(lon))
-    B = (float(lat_next),float(lon_next))
-    #Define the ellipsoid
-    geod = Geodesic.WGS84
-    #Solve the Inverse problem
-    inv = geod.Inverse(A[0],A[1],B[0],B[1])
-    #deno sumarle angulo al azimut desde 90 a -90
-    azi1 = (inv['azi1'])
-    print('Initial Azimuth from A to B = ' + str(azi1))
-    return azi1
-
-
-def LatitudeLongitude(lat,lon,lat_next,lon_next,z,x):
-    A = (float(lat),float(lon))
-    B = (float(lat_next),float(lon_next))
-    #print(A,B)
-
-    s= z
-    #Define the ellipsoid
-    geod = Geodesic.WGS84
-
-    #Solve the Inverse problem
-    inv = geod.Inverse(A[0],A[1],B[0],B[1])
-    #deno sumarle angulo al azimut desde 90 a -90
-    azi1 = (inv['azi1'])
-    print('Initial Azimuth from A to B = ' + str(azi1))
-
-    #Solve the Direct problem
-    dir = geod.Direct(A[0],A[1],azi1,s)
-
-    C = (dir['lat2'],dir['lon2'])
-    
-    if x<0:
-        azimuth_perpendicular = azi1 - 90  # Sumar 90 grados para obtener el acimut perpendicular
-    if x>0:
-        azimuth_perpendicular = azi1 + 90  # Restar 90 grados para obtener el acimut perpendicular
-    
-    # Calcular el nuevo punto en función de la distancia perpendicular y el acimut
-    dirper = geod.Direct(dir['lat2'], dir['lon2'], azimuth_perpendicular, abs(x))
-
-    C = (dirper['lat2'],dirper['lon2'])   
-    
-    print('GPS =' + str(C))
-    return C
 
 # utils.py
 class Pila:
@@ -376,3 +334,103 @@ def dxfcoord(loc):
     return transformer.transform(loc[0], loc[1])
 
 
+def LatitudeLongitude2(ps, ind, z, x, offset ):
+
+    geod = Geodesic.WGS84
+    ps_len = len(ps.album.all())
+
+    # if ps_len < offset * 2:
+    #     yield ValueError('no hay suficientes fotos en el dataset')
+    currentphotopair = ps.album.get(index=ind)
+    loc = currentphotopair.get_location()
+
+    az = []
+    if ind < offset:
+        for i in range(ind+1, ind + 2*offset):
+            otherphotopair = ps.album.get(index = i) 
+            otherloc = otherphotopair.get_location()
+            inv = geod.Inverse(loc[0],loc[1],otherloc[0],otherloc[1])
+            az.append(inv['azi1'])
+    
+    elif ind > ps_len - offset:
+        for i in range(ind - 2*offset, ind-1):
+            otherphotopair = ps.album.get(index = i) 
+            otherloc = otherphotopair.get_location()
+            inv = geod.Inverse(otherloc[0],otherloc[1],loc[0],loc[1])
+            az.append(inv['azi1'])
+    else:
+        for i in range(ind-offset, ind+offset):
+            if i != ind:
+                otherphotopair = ps.album.get(index = i) 
+                otherloc = otherphotopair.get_location()
+                if i > ind:
+                    inv = geod.Inverse(loc[0],loc[1],otherloc[0],otherloc[1])
+                if i < ind:
+                    inv = geod.Inverse(otherloc[0],otherloc[1],loc[0],loc[1])
+                #print(inv['azi1'])
+                az.append(inv['azi1'])
+
+    azi1 = (sum(az) / len(az))
+    print('Initial Azimuth from A to B = ' + str(azi1))
+    dir = geod.Direct(loc[0],loc[1],azi1,z)
+    
+    if x<0:
+        azimuth_perpendicular = azi1 - 90   
+    if x>0:
+        azimuth_perpendicular = azi1 + 90
+
+    print("azimuth_perpendicular: ", azimuth_perpendicular)
+    
+    dirper = geod.Direct(dir['lat2'], dir['lon2'], azimuth_perpendicular, abs(x))
+
+    final_loc = (dirper['lat2'],dirper['lon2'])   
+    
+    print(final_loc)
+
+    return final_loc,azi1
+
+
+def LatitudeLongitude(lat,lon,lat_next,lon_next,z,x):
+    A = (float(lat),float(lon))
+    B = (float(lat_next),float(lon_next))
+    #print(A,B)
+
+    s= z
+    #Define the ellipsoid
+    geod = Geodesic.WGS84
+
+    #Solve the Inverse problem
+    inv = geod.Inverse(A[0],A[1],B[0],B[1])
+    #deno sumarle angulo al azimut desde 90 a -90
+    azi1 = (inv['azi1'])
+    print('Initial Azimuth from A to B = ' + str(azi1))
+
+    #Solve the Direct problem
+    dir = geod.Direct(A[0],A[1],azi1,s)
+
+    C = (dir['lat2'],dir['lon2'])
+    
+    if x<0:
+        azimuth_perpendicular = azi1 - 90  # Sumar 90 grados para obtener el acimut perpendicular
+    if x>0:
+        azimuth_perpendicular = azi1 + 90  # Restar 90 grados para obtener el acimut perpendicular
+    print("azimuth_perpendicular: ", azimuth_perpendicular)
+    # Calcular el nuevo punto en función de la distancia perpendicular y el acimut
+    dirper = geod.Direct(dir['lat2'], dir['lon2'], azimuth_perpendicular, abs(x))
+
+    C = (dirper['lat2'],dirper['lon2'])   
+    
+    print('GPS =' + str(C))
+    return C
+
+def Azimuth(lat,lon,lat_next,lon_next):
+    A = (float(lat),float(lon))
+    B = (float(lat_next),float(lon_next))
+    #Define the ellipsoid
+    geod = Geodesic.WGS84
+    #Solve the Inverse problem
+    inv = geod.Inverse(A[0],A[1],B[0],B[1])
+    #deno sumarle angulo al azimut desde 90 a -90
+    azi1 = (inv['azi1'])
+    print('Initial Azimuth from A to B = ' + str(azi1))
+    return azi1
