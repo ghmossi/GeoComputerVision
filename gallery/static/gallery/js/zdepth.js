@@ -16,15 +16,13 @@ document.getElementById('enviar').addEventListener('click', async function () {
     const yRight2 = document.getElementById('yRight2').value;
     const wRight2 = document.getElementById('wRight2').value;
     const hRight2 = document.getElementById('hRight2').value;
-    const pk = document.getElementById('pk').value;
-    const pk2 = document.getElementById('pk2').value;
     const distanceObjects = document.getElementById('distanceObjects').value;
     
     try {
         console.log("xRight2: "+xRight2)
         if(distanceObjects=="false"){   
             console.log("distanceObjects FALSE")
-            const response = await fetch(`/zdepth/?urlRight=${urlRight}&urlLeft=${urlLeft}&xRight=${xRight}&yRight=${yRight}&wRight=${wRight}&hRight=${hRight}&lat=${lat}&lon=${lon}&lat_next=${lat_next}&lon_next=${lon_next}&pk=${pk}&pk2=${pk2}`);
+            const response = await fetch(`/zdepth/?urlRight=${urlRight}&urlLeft=${urlLeft}&xRight=${xRight}&yRight=${yRight}&wRight=${wRight}&hRight=${hRight}&lat=${lat}&lon=${lon}&lat_next=${lat_next}&lon_next=${lon_next}`);
             const data = await response.json();
             if (data.zdepth) {
                 resultDiv.innerText = `Profundidad desde el centro en Z: ${data.zdepth} / X:${data.x} / Disp:${data.disp}`; 

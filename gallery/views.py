@@ -21,8 +21,8 @@ import os
 import geopandas as gpd
 from yolov.models.experimental import attempt_load
 from yolov.utils.torch_utils import select_device
-##from django.core import serializers
-## prueba
+from django.core import serializers
+
 from multiprocessing import Process
 import time
 from .tasks import mitarea
@@ -95,9 +95,9 @@ class ImageMapView(generic.ListView):
         azimuthNext10=Azimuth(location_next.latitude,location_next.longitude,location_next10.latitude,location_next10.longitude)
         if abs(azimuthCurrent - azimuthNext10) <= 3:
             context['location_next']=location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=index+10).location    
-            print("DIF_Azimuth: ",str(abs(azimuthCurrent - azimuthNext10)))
+            print("DIFERENCIA: ",str(abs(azimuthCurrent - azimuthNext10)))
         else:
-            print("DIF_Azimuth: ",str(abs(azimuthCurrent - azimuthNext10)))
+            print("DIFERENCIA: ",str(abs(azimuthCurrent - azimuthNext10)))
             context['location_next']=location_next = Photo_pair.objects.filter(photoset = PhotoSet.objects.get(id = self.kwargs['pk'])).get(index=index+2).location
         data_list4 = []
         data_dict4 = {
@@ -372,14 +372,13 @@ class DetectObjectViewManual(generic.ListView):
         #pilaLocation = Pila()
         for objeto,label,conf in zip(objectsRoi,objectLabel,objectconf):
             zdepth,xdepth,ddepth=depthwithframes(objeto.x,objeto.y,objeto.w,objeto.h,"/media/"+str(image_r),"/media/"+str(image_l))
-            loc,azimuth=LatitudeLongitude2(ps,self.kwargs['pk2'],zdepth,xdepth,15)
-            #lat_new,lon_new=LatitudeLongitude(context['location'].latitude,context['location'].longitude,context['location_next'].latitude,context['location_next'].longitude,zdepth,xdepth)
+            lat_new,lon_new=LatitudeLongitude(context['location'].latitude,context['location'].longitude,context['location_next'].latitude,context['location_next'].longitude,zdepth,xdepth)
             if zdepth<=maxDepth and zdepth>= minDepth and objeto.x>minWidth and objeto.x<maxWidth and objeto.y<maxHeight:
                 
                 #currentphoto=Photo_pair.objects.filter(photoset = ps).get(index=self.kwargs['pk2']-(i+1))
                 context['photopair'] = Photo_pair.objects.filter(photoset = ps).get(index=self.kwargs['pk2'])
                 context['objetos'] = StreetObject.objects.filter(photo = context['photopair'])
-                obj = ObjectDetectRois(objeto.x,objeto.y,objeto.w,objeto.h,zdepth,xdepth,ddepth,loc[0],loc[1],label,conf)
+                obj = ObjectDetectRois(objeto.x,objeto.y,objeto.w,objeto.h,zdepth,xdepth,ddepth,lat_new,lon_new,label,conf)
                 objectdetectroi.append(obj)
             
         context['objectsRoi'] =objectdetectroi
@@ -391,8 +390,8 @@ class DetectObjectViewManual(generic.ListView):
         except:
             context['map'] = "Esta imagen no posee coordenadas"
         #context['map'] =map
-        cv2.imwrite('./media/temp/detect.jpg', imagen)
-        context['objectdetect'] ='/media/temp/detect.jpg'
+        #cv2.imwrite('./media/detect.jpg', imagen)
+        #context['objectdetect'] ='/media/detect.jpg'
         
         return context
     
@@ -457,19 +456,12 @@ def zdepth(request):
     lon = request.GET.get('lon')
     lat_next = request.GET.get('lat_next')
     lon_next = request.GET.get('lon_next')
-    pk = request.GET.get('pk')
-    pk2 = request.GET.get('pk2')
     zdepth,x,disp=depthwithframes(xRight,yRight,wRight,hRight,urlRight,urlLeft)
     lat_new=0
     lon_new=0
-    ps = PhotoSet.objects.get(id = pk)
-    pk2=int(pk2)
-    #lat_new,lon_new=LatitudeLongitude(lat,lon,lat_next,lon_next,zdepth,x)
-    loc,azimuth=LatitudeLongitude2(ps,pk2,zdepth,x,15)
-    print("ps: ",ps)
-    print("pk2: ",pk2)
+    lat_new,lon_new=LatitudeLongitude(lat,lon,lat_next,lon_next,zdepth,x)
     print(zdepth,x,disp)
-    return JsonResponse({'zdepth':zdepth,'x':x,'disp':disp,'lat_new':loc[0],'lon_new':loc[1]})
+    return JsonResponse({'zdepth':zdepth,'x':x,'disp':disp,'lat_new':lat_new,'lon_new':lon_new})
 
 def objectselec(request):
     print("PASA POR OBEJTODATA")
@@ -560,8 +552,7 @@ def updateprogress(request):
         progress=round((actual*100)/int(total))
         return JsonResponse({'progress':progress})
     
-    if parametrosPS.statusDetection == "terminated":
-        return JsonResponse({'text':"Proceso terminado"})
+    return JsonResponse({'text':"Proceso terminado"})
 
 
 def updateprogressmapa(request):
